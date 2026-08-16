@@ -1,0 +1,11 @@
+{
+  "name": "speciai-advisory",
+  "version": "0.1.0",
+  "description": "SpeciAI CLI 자문팀 — 분야별 전문 에이전트 + 법령 검증 + 한국어 문서 생성 (사업계획서·계약서·의견서 DOCX)",
+  "author": {
+    "name": "SpeciAI",
+    "url": "https://speciai.team"
+  },
+  "homepage": "https://speciai.team",
+  "keywords": ["korean", "legal", "labor", "tax", "business-plan", "advisory"]
+}

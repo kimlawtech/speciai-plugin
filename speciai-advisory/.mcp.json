@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "speciai": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/server.mjs"],
+      "env": {
+        "SPECIAI_BASE_URL": "${SPECIAI_BASE_URL:-https://speciai.team}",
+        "SPECIAI_API_KEY": "${SPECIAI_API_KEY:-}"
+      }
+    }
+  }
+}

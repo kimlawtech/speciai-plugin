@@ -1,0 +1,14 @@
+{
+  "name": "speciai",
+  "owner": {
+    "name": "SpeciAI",
+    "url": "https://speciai.team"
+  },
+  "plugins": [
+    {
+      "name": "speciai-advisory",
+      "source": "./speciai-advisory",
+      "description": "CLI 자문팀 — 법무·노무·세무·재무·사업계획 에이전트가 검증된 근거(법령 RAG·법제처 실존 확인)로 자문하고 한국어 문서를 DOCX로 생성"
+    }
+  ]
+}
