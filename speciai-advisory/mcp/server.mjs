@@ -126,7 +126,7 @@ const TOOLS = [
       properties: {
         domain: {
           type: 'string',
-          enum: ['legal', 'labor', 'tax', 'finance', 'bizplan', 'verifier', 'criminal', 'skill_advisory', 'skill_bizplan', 'skill_contract', 'skill_criminal', 'skill_status'],
+          enum: ['legal', 'labor', 'tax', 'finance', 'bizplan', 'verifier', 'criminal', 'skill_advisory', 'skill_bizplan', 'skill_contract', 'skill_criminal', 'skill_status', 'skill_receipt', 'skill_jangbu', 'skill_privacy', 'skill_certmail'],
         },
       },
       required: ['domain'],
@@ -136,6 +136,17 @@ const TOOLS = [
     name: 'speciai_team',
     description: '사용자의 팀 설정 조회 — 자문 시작 전 반드시 호출. 콘솔(localhost:4747)에서 설정한 에이전트 켜기/끄기·맞춤 지시·저장된 워크플로우를 반환한다. 꺼진 에이전트는 스폰하지 않고, 맞춤 지시는 해당 에이전트 프롬프트에 포함하며, 사용자가 워크플로우 이름을 부르면 그 단계 순서대로 실행한다.',
     inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'speciai_biz_status',
+    description: '국세청 사업자등록 상태조회 — 사업자등록번호(10자리)로 계속사업자/휴업/폐업 여부, 과세유형(일반·간이·면세), 폐업일을 실시간 확인. 거래처 검증·계약 전 실사·세금계산서 수취 가능 여부 판단용. 최대 10건 일괄 조회.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        bizNumbers: { type: 'array', items: { type: 'string' }, description: '사업자등록번호 배열 (하이픈 유무 무관, 최대 10건)' },
+      },
+      required: ['bizNumbers'],
+    },
   },
   {
     name: 'speciai_paylink',
@@ -257,6 +268,22 @@ async function callTool(name, args) {
         `저장된 워크플로우 (사용자가 이름을 부르면 이 순서대로 실행):\n${flowsTxt}\n` +
         `사업 정보 (자문 시 사실관계 기본값 — 되묻지 말고 활용):\n${companyTxt}`,
     };
+  }
+
+  if (name === 'speciai_biz_status') {
+    const nums = (args.bizNumbers || []).map(n => String(n).replace(/[^0-9]/g, '')).filter(n => n.length === 10).slice(0, 10);
+    if (!nums.length) return { text: '유효한 사업자등록번호(10자리)가 없습니다.', isError: true };
+    const r = await api('POST', '/nts/v1/status', { b_no: nums });
+    if (r.status !== 200 || !r.json?.data) return { text: `국세청 조회 실패 (HTTP ${r.status})`, isError: true };
+    const rows = r.json.data.map(d => {
+      const parts = [`${d.b_no}: ${d.b_stt || '미등록'}`];
+      if (d.tax_type) parts.push(d.tax_type);
+      if (d.end_dt) parts.push(`폐업일 ${d.end_dt}`);
+      if (d.b_stt_cd !== '01' && d.b_stt) parts.push('⚠ 세금계산서 수취 불가 가능 — 거래 전 확인 필요');
+      if (!d.b_stt) parts.push('⚠ 등록되지 않은 번호 — 미등록 사업자 거래 시 매입세액 불공제 위험');
+      return '- ' + parts.join(' · ');
+    }).join('\n');
+    return { text: `[국세청 사업자등록 상태]\n${rows}` };
   }
 
   if (name === 'speciai_paylink') {
