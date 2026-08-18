@@ -67,11 +67,14 @@ function openLocal(path) {
 const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'console-dist');
 const MIME = { html: 'text/html; charset=utf-8', js: 'text/javascript', css: 'text/css', png: 'image/png', svg: 'image/svg+xml', woff2: 'font/woff2', ico: 'image/x-icon', map: 'application/json' };
 function serveStatic(res, relPath) {
-  const safe = relPath.replace(/\.\./g, '');
-  const p = join(DIST, safe);
+  let safe = relPath.replace(/\.\./g, '');
+  let p = join(DIST, safe);
+  // 디렉토리 요청(rhwp-studio/ 등)은 index.html로 — 본체 정적 서버와 동일 동작
+  if (existsSync(p) && statSync(p).isDirectory()) { safe = join(safe, 'index.html'); p = join(DIST, safe); }
   if (!existsSync(p) || !statSync(p).isFile()) return false;
   const ext = p.split('.').pop();
-  res.writeHead(200, { 'content-type': MIME[ext] || 'application/octet-stream', 'cache-control': safe.startsWith('assets/') ? 'max-age=86400' : 'no-cache' });
+  const mime = { ...MIME, wasm: 'application/wasm', json: 'application/json', woff: 'font/woff', ttf: 'font/ttf', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' };
+  res.writeHead(200, { 'content-type': mime[ext] || 'application/octet-stream', 'cache-control': safe.startsWith('assets/') ? 'max-age=86400' : 'no-cache' });
   res.end(readFileSync(p));
   return true;
 }
@@ -113,8 +116,8 @@ const server = createServer(async (req, res) => {
     return res.end('<meta charset="utf-8"><body style="font-family:sans-serif;padding:40px">콘솔 UI가 아직 빌드되지 않았습니다.<br>레포 루트에서 <code>npm run build:console</code> 실행 후 새로고침하세요.</body>');
   }
 
-  // 정적 자산 (React 빌드 산출물 + 아바타)
-  if ((url.pathname.startsWith('/assets/') || url.pathname.startsWith('/avatars/')) && req.method === 'GET') {
+  // 정적 자산 (React 빌드 산출물 + public 동봉물: 아바타·rhwp HWP 편집기·서식 템플릿)
+  if ((url.pathname.startsWith('/assets/') || url.pathname.startsWith('/avatars/') || url.pathname.startsWith('/rhwp-studio/') || url.pathname.startsWith('/templates/') || /^\/(favicon|og-image|seal-demo)/.test(url.pathname)) && req.method === 'GET') {
     if (serveStatic(res, url.pathname.slice(1))) return;
     res.writeHead(404); return res.end();
   }
