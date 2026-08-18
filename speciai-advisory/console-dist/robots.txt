@@ -1,0 +1,61 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+# SpeciAI studio — 인증 영역·부속 리소스는 색인 제외
+Disallow: /studio/app/
+Disallow: /studio/login
+Disallow: /studio/signup
+Disallow: /studio/templates/
+
+# AI 크롤러(생성형 검색·학습) — 공개 영역 허용, 인증 영역은 * 규칙과 동일하게 제외.
+# User-agent: * 로도 이미 허용되지만, 봇별 정책을 따로 조정할 수 있도록 명시해 둔다.
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+Disallow: /studio/app/
+Disallow: /studio/login
+Disallow: /studio/signup
+Disallow: /studio/templates/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /api/
+Disallow: /studio/app/
+Disallow: /studio/login
+Disallow: /studio/signup
+Disallow: /studio/templates/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /api/
+Disallow: /studio/app/
+Disallow: /studio/login
+Disallow: /studio/signup
+Disallow: /studio/templates/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /api/
+Disallow: /studio/app/
+Disallow: /studio/login
+Disallow: /studio/signup
+Disallow: /studio/templates/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+Disallow: /studio/app/
+Disallow: /studio/login
+Disallow: /studio/signup
+Disallow: /studio/templates/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /api/
+Disallow: /studio/app/
+Disallow: /studio/login
+Disallow: /studio/signup
+Disallow: /studio/templates/
+
+Sitemap: https://speciai.team/sitemap.xml
+Sitemap: https://speciai.team/studio/sitemap.xml

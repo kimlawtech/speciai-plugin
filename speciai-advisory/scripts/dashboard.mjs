@@ -151,7 +151,19 @@ const server = createServer(async (req, res) => {
   if (/^\/(lawmaking|openapi|naver|nts|nabo)\//.test(url.pathname) || url.pathname.startsWith('/api/bizinfo/') || url.pathname.startsWith('/api/gov-extra/')) {
     const { baseUrl } = resolve_();
     try {
-      const r = await fetch(baseUrl + url.pathname + url.search, { signal: AbortSignal.timeout(20_000) });
+      // POST(국세청 사업자 상태조회 등)도 메서드·바디 그대로 중계
+      const hasBody = !['GET', 'HEAD'].includes(req.method);
+      const reqBody = hasBody ? await new Promise((ok) => {
+        const chunks = [];
+        req.on('data', c => chunks.push(c));
+        req.on('end', () => ok(Buffer.concat(chunks)));
+      }) : undefined;
+      const r = await fetch(baseUrl + url.pathname + url.search, {
+        method: req.method,
+        headers: { 'content-type': req.headers['content-type'] || 'application/json' },
+        body: reqBody,
+        signal: AbortSignal.timeout(20_000),
+      });
       const body = Buffer.from(await r.arrayBuffer());
       res.writeHead(r.status, { 'content-type': r.headers.get('content-type') || 'application/octet-stream' });
       return res.end(body);
@@ -208,6 +220,36 @@ const server = createServer(async (req, res) => {
     }
     res.writeHead(404, { 'content-type': 'application/json' });
     return res.end('{"success":false}');
+  }
+
+  // ── JWT 프록시 — 콘솔(브라우저)의 운영 API 호출 중계 (CORS 회피) ──
+  // 로그인 세션의 Bearer가 붙은 /api/* 요청을 운영 서버로 그대로 전달한다.
+  // 응답은 스트리밍(pipe)이라 SSE(실시간 채팅)도 통과한다.
+  if (url.pathname.startsWith('/api/') && req.headers.authorization
+      && !['/api/custom-agents', '/api/team', '/api/workflows', '/api/docs', '/api/open', '/api/config'].some(p => url.pathname.startsWith(p))) {
+    return readBody(req, async (body) => {
+      const { baseUrl } = resolve_();
+      let upstream;
+      try {
+        upstream = await fetch(baseUrl + url.pathname + url.search, {
+          method: req.method,
+          headers: {
+            authorization: req.headers.authorization,
+            'content-type': req.headers['content-type'] || 'application/json',
+          },
+          body: ['GET', 'HEAD'].includes(req.method) ? undefined : body,
+          signal: AbortSignal.timeout(180_000),
+        });
+      } catch (e) {
+        res.writeHead(502, { 'content-type': 'application/json' });
+        return res.end(JSON.stringify({ success: false, error: String(e.message) }));
+      }
+      res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') || 'application/json' });
+      try {
+        if (upstream.body) { for await (const chunk of upstream.body) res.write(chunk); }
+      } catch { /* 클라이언트 중단 */ }
+      res.end();
+    });
   }
 
   // ── 본체 MultiChat 원본 구동용 어댑터 ─────────────────────────
