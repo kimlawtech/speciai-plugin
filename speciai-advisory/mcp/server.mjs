@@ -51,7 +51,7 @@ async function api(method, path, body) {
 
 function gateMessage(r) {
   if (r.status === 401) {
-    return '인증 실패: SPECIAI_API_KEY가 없거나 무효. https://speciai.team 설정 > CLI 키에서 발급 후 환경변수로 설정.';
+    return '인증 실패: SPECIAI_API_KEY가 없거나 무효.\n가장 쉬운 방법: node ${CLAUDE_PLUGIN_ROOT}/scripts/dashboard.mjs 실행 → http://localhost:4747 에서 로그인(구글 가능)하면 키가 자동 발급·저장됩니다(재시작 불필요).\n수동: https://speciai.team 설정 > CLI 키 발급 → SPECIAI_API_KEY 환경변수 설정 후 Claude Code 재시작.';
   }
   if (r.status === 402) {
     const { plan, limit, paylink } = r.json || {};
