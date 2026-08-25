@@ -126,7 +126,7 @@ const TOOLS = [
       properties: {
         domain: {
           type: 'string',
-          enum: ['legal', 'labor', 'tax', 'finance', 'bizplan', 'verifier', 'criminal', 'skill_advisory', 'skill_bizplan', 'skill_contract', 'skill_criminal', 'skill_status', 'skill_receipt', 'skill_jangbu', 'skill_privacy', 'skill_certmail'],
+          enum: ['legal', 'labor', 'tax', 'finance', 'bizplan', 'verifier', 'criminal', 'skill_advisory', 'skill_bizplan', 'skill_contract', 'skill_criminal', 'skill_status', 'skill_receipt', 'skill_jangbu', 'skill_privacy', 'skill_certmail', 'skill_legaldoc'],
         },
       },
       required: ['domain'],
@@ -136,6 +136,18 @@ const TOOLS = [
     name: 'speciai_team',
     description: '사용자의 팀 설정 조회 — 자문 시작 전 반드시 호출. 콘솔(localhost:4747)에서 설정한 에이전트 켜기/끄기·맞춤 지시·저장된 워크플로우를 반환한다. 꺼진 에이전트는 스폰하지 않고, 맞춤 지시는 해당 에이전트 프롬프트에 포함하며, 사용자가 워크플로우 이름을 부르면 그 단계 순서대로 실행한다.',
     inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'speciai_doc_guide',
+    description: '법률문서 작성 가이드 수신 — 문서 종류(계약서·소장·답변서·준비서면·지급명령·가압류·가처분·강제집행·행정심판·내용증명·정관·주주간계약·취업규칙·진술서·합의서·위임장 등 30여 유형)를 주면 문서군 판정(계약/소송/통지/진술), 공통 작성 원칙, 유형별 필수 조항·주의 조항·근거 법령, 업종 특약, 참조 자산(공정위 표준계약서 조항 구성 또는 대한법률구조공단 작성례·실무 주석)을 반환한다. 모든 문서 초안 작성 전 필수 호출.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        docType: { type: 'string', description: '문서 종류 한 구절 (예: "물품대금 청구 소장", "주주간계약서", "편의점 가맹계약서", "행정심판 청구서")' },
+        context: { type: 'string', description: '업종·회사 단서 한 줄 (업종 특약 매칭용, 선택)' },
+      },
+      required: ['docType'],
+    },
   },
   {
     name: 'speciai_biz_status',
@@ -268,6 +280,23 @@ async function callTool(name, args) {
         `저장된 워크플로우 (사용자가 이름을 부르면 이 순서대로 실행):\n${flowsTxt}\n` +
         `사업 정보 (자문 시 사실관계 기본값 — 되묻지 말고 활용):\n${companyTxt}`,
     };
+  }
+
+  if (name === 'speciai_doc_guide') {
+    const qs = new URLSearchParams({ docType: String(args.docType || ''), context: String(args.context || '') });
+    const r = await api('GET', `/api/plugin/docguide?${qs}`);
+    const gate = gateMessage(r);
+    if (gate) return { text: gate, isError: true };
+    if (!r.json?.success) return { text: `가이드 수신 실패: ${r.json?.error || r.status}`, isError: true };
+    const g = r.json;
+    const out = [`[문서군: ${g.familyLabel} (${g.family})] — ${g.docType}`, '', g.guide];
+    if (g.rule) {
+      out.push('', `[필수 항목 ${g.rule.required.length}개 — 각각 독립한 조·항목으로]`, ...g.rule.required.map(x => `- ${x}`));
+      if (g.rule.forbidden?.length) out.push('', '[주의 — 요건 미달 시 넣지 말 것]', ...g.rule.forbidden.map(x => `- ${x}`));
+      if (g.rule.statute) out.push('', `[근거] ${g.rule.statute}`);
+    }
+    if (g.reference) out.push('', g.reference.text, g.reference.url ? `(원문: ${g.reference.url})` : '');
+    return { text: out.join('\n') };
   }
 
   if (name === 'speciai_biz_status') {
