@@ -1,5 +1,9 @@
 # SpeciAI CLI 자문팀 플러그인
 
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-000000)](https://speciai.kr/plugin)
+[![요금](https://img.shields.io/badge/%EB%AC%B4%EB%A3%8C%20%EC%8B%9C%EC%9E%91-0%EC%9B%90-0f766e)](https://speciai.kr/plugin#pricing)
+[![스페시아이](https://img.shields.io/badge/SpeciAI-speciai.kr-2b5ca8)](https://speciai.kr)
+
 Claude Code 안에서 법무·노무·세무·재무·사업계획 전문 에이전트가 검증된 근거로 자문하고, 한국어 문서(사업계획서·계약서·의견서)를 DOCX로 생성한다.
 
 ## 설치
@@ -62,3 +66,24 @@ speciai-advisory/
 ## 면책
 
 본 플러그인의 산출물은 일반적 정보 제공이며 변호사·세무사·노무사의 개별 자문을 대체하지 않는다.
+
+---
+
+## 만든 곳
+
+[스페시아이](https://speciai.kr)는 법률·세무·노무·회계·의료 실무에 쓰는 도메인 특화 AI를 만듭니다.
+한국능률협회와 AI 교육과정을 공동 개설했고, 전문직 세미나에 누적 500명 이상이 참여했습니다.
+
+- 제품 소개 · 요금 — <https://speciai.kr/plugin>
+- 전체 제품 — <https://speciai.kr/services>
+- 전문직 AI 세미나(월 1회) — <https://speciai.kr/seminar>
+- 문의 — ceo@speciai.ai.kr
+
+### 함께 보면 좋은 오픈소스
+
+| 저장소 | 내용 |
+|---|---|
+| [korean-privacy-terms](https://github.com/kimlawtech/korean-privacy-terms) | 처리방침·이용약관 자동 생성 |
+| [korean-contracts](https://github.com/kimlawtech/korean-contracts) | 한국 계약서 9종 |
+| [korean-jangbu-for](https://github.com/kimlawtech/korean-jangbu-for) | 장부 자동 생성·OCR |
+| [korean-certified-mail](https://github.com/kimlawtech/korean-certified-mail) | 내용증명 14종 |
